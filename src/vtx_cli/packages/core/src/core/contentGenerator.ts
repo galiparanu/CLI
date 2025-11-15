@@ -155,6 +155,18 @@ export async function createContentGenerator(
       }
       const httpOptions = { headers };
 
+      // Use native Vertex AI SDK when vertexai flag is true and project is configured
+      if (config.vertexai && config.project) {
+        return new LoggingContentGenerator(
+          new VertexAiContentGenerator(
+            config.project,
+            config.location || 'us-central1',
+          ),
+          gcConfig,
+        );
+      }
+
+      // Fallback to @google/genai SDK
       const googleGenAI = new GoogleGenAI({
         apiKey: config.apiKey === '' ? undefined : config.apiKey,
         vertexai: config.vertexai,
