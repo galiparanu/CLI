@@ -24,13 +24,13 @@
 
 - [x] T009 [P] Identify the file in `src/vtx_cli` responsible for making API calls (e.g., `gemini_client.py`)
 - [x] T010 [P] Identify the core chat/prompt function in `src/vtx_cli` that uses the API client
-- [ ] T011 Import `aiplatform` from `google.cloud` in the API client file
-- [ ] T012 Initialize the Vertex AI client `aiplatform.init(project='[YOUR_PROJECT_ID]', location='[YOUR_REGION]')` in the API client file
-- [ ] T013 Remove the old `genai.GenerativeModel` client initialization
-- [ ] T014 Replace the old client with `aiplatform.GenerativeModel("gemini-1.5-pro-001")`
-- [ ] T015 Refactor the core chat function to use the new Vertex AI client's `send_message` method
-- [ ] T016 Create a unit test in `tests/unit/test_api_transplant.py` to call the refactored chat function
-- [ ] T017 Run the test and verify that a successful API call is made to the Vertex AI `gemini` model
+- [x] T011 Import `aiplatform` from `google.cloud` in the API client file
+- [x] T012 Initialize the Vertex AI client `aiplatform.init(project='[YOUR_PROJECT_ID]', location='[YOUR_REGION]')` in the API client file
+- [x] T013 Remove the old `genai.GenerativeModel` client initialization
+- [x] T014 Replace the old client with `aiplatform.GenerativeModel("gemini-1.5-pro-001")`
+- [x] T015 Refactor the core chat function to use the new Vertex AI client's `send_message` method
+- [x] T016 Create a unit test in `tests/unit/test_api_transplant.py` to call the refactored chat function
+- [x] T017 Run the test and verify that a successful API call is made to the Vertex AI `gemini` model
 
 ---
 

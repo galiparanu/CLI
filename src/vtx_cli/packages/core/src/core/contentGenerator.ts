@@ -97,7 +97,7 @@ export async function createContentGeneratorConfig(
 
   if (
     authType === AuthType.USE_VERTEX_AI &&
-    (googleApiKey || (googleCloudProject && googleCloudLocation))
+    (googleApiKey || googleCloudProject)
   ) {
     contentGeneratorConfig.apiKey = googleApiKey;
     contentGeneratorConfig.vertexai = true;
