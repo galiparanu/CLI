@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { VertexAiContentGenerator } from '../vertexAiContentGenerator.js';
-import type { GenerateContentParameters } from '@google/genai';
 
 describe('Vertex AI API Transplant', () => {
   const testProject = process.env['GOOGLE_CLOUD_PROJECT'] || 'test-project';

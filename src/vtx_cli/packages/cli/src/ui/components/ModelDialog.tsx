@@ -5,7 +5,7 @@
  */
 
 import type React from 'react';
-import { useCallback, useContext, useMemo } from 'react';
+import { useCallback, useContext, useMemo, useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import {
   DEFAULT_GEMINI_FLASH_LITE_MODEL,
@@ -19,12 +19,13 @@ import { useKeypress } from '../hooks/useKeypress.js';
 import { theme } from '../semantic-colors.js';
 import { DescriptiveRadioButtonSelect } from './shared/DescriptiveRadioButtonSelect.js';
 import { ConfigContext } from '../contexts/ConfigContext.js';
+import { ModelService } from '@google/gemini-cli-core';
 
 interface ModelDialogProps {
   onClose: () => void;
 }
 
-const MODEL_OPTIONS = [
+const DEFAULT_MODEL_OPTIONS = [
   {
     value: DEFAULT_GEMINI_MODEL_AUTO,
     title: 'Auto (recommended)',
@@ -53,9 +54,42 @@ const MODEL_OPTIONS = [
 
 export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
   const config = useContext(ConfigContext);
+  const [modelOptions, setModelOptions] = useState(DEFAULT_MODEL_OPTIONS);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Determine the Preferred Model (read once when the dialog opens).
   const preferredModel = config?.getModel() || DEFAULT_GEMINI_MODEL_AUTO;
+
+  // Try to load models from models.yaml if USE_MODEL_ROUTER is enabled
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        if (config?.getUseModelRouter()) {
+          const modelService = new ModelService();
+          modelService.loadModels();
+          const allModels = modelService.getAllModels();
+          
+          // Convert models.yaml entries to dialog options
+          const customOptions = Object.entries(allModels).map(([alias, modelConfig]) => ({
+            value: alias,
+            title: alias,
+            description: modelConfig.name,
+            key: alias,
+          }));
+          
+          if (customOptions.length > 0) {
+            setModelOptions(customOptions);
+          }
+        }
+      } catch (error) {
+        // If loading fails, fall back to default options and show error
+        setLoadError(error instanceof Error ? error.message : String(error));
+        setModelOptions(DEFAULT_MODEL_OPTIONS);
+      }
+    };
+    
+    loadModels();
+  }, [config]);
 
   useKeypress(
     (key) => {
@@ -68,8 +102,8 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
 
   // Calculate the initial index based on the preferred model.
   const initialIndex = useMemo(
-    () => MODEL_OPTIONS.findIndex((option) => option.value === preferredModel),
-    [preferredModel],
+    () => modelOptions.findIndex((option) => option.value === preferredModel),
+    [preferredModel, modelOptions],
   );
 
   // Handle selection internally (Autonomous Dialog).
@@ -94,9 +128,14 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       width="100%"
     >
       <Text bold>Select Model</Text>
+      {loadError && (
+        <Box marginTop={1}>
+          <Text color={theme.text.error}>Warning: {loadError}</Text>
+        </Box>
+      )}
       <Box marginTop={1}>
         <DescriptiveRadioButtonSelect
-          items={MODEL_OPTIONS}
+          items={modelOptions}
           onSelect={handleSelect}
           initialIndex={initialIndex}
           showNumbers={true}
@@ -104,7 +143,7 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       </Box>
       <Box flexDirection="column">
         <Text color={theme.text.secondary}>
-          {'> To use a specific Gemini model on startup, use the --model flag.'}
+          {'> To use a specific model on startup, use the --model flag.'}
         </Text>
       </Box>
       <Box marginTop={1} flexDirection="column">

@@ -42,15 +42,15 @@
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Populate `configs/models.yaml` with entries for `gemini`, `claude`, `qwen-coder`, and `deepseek`
-- [ ] T019 [P] [US1] Create a `CliState` model in `src/vtx_cli/models/state.py` to manage the active model
-- [ ] T020 [P] [US1] Create a `ModelService` in `src/vtx_cli/services/model_service.py` to load `models.yaml`
-- [ ] T021 [US1] Implement the `/model <alias>` command logic in `src/vtx_cli/commands/model_command.py`
-- [ ] T022 [US1] Create a `ModelDispatcher` in `src/vtx_cli/services/dispatcher.py`
-- [ ] T023 [US1] Implement a `gemini_adapter` function in the dispatcher for Gemini-like request formats
-- [ ] T024 [US1] Implement a `claude_adapter` function in the dispatcher for Claude's request format
-- [ ] T025 [US1] Modify the core chat function to use the `ModelDispatcher` to format the API payload based on the active model's adapter
-- [ ] T026 [US1] Modify the core chat function to load the `persona.txt` and inject it into every API call
+- [x] T018 [P] [US1] Populate `configs/models.yaml` with entries for `gemini`, `claude`, `qwen-coder`, and `deepseek`
+- [x] T019 [P] [US1] Create a `CliState` model in `src/vtx_cli/models/state.py` to manage the active model
+- [x] T020 [P] [US1] Create a `ModelService` in `src/vtx_cli/services/model_service.py` to load `models.yaml`
+- [x] T021 [US1] Implement the `/model <alias>` command logic in `src/vtx_cli/commands/model_command.py`
+- [x] T022 [US1] Create a `ModelDispatcher` in `src/vtx_cli/services/dispatcher.py`
+- [x] T023 [US1] Implement a `gemini_adapter` function in the dispatcher for Gemini-like request formats
+- [x] T024 [US1] Implement a `claude_adapter` function in the dispatcher for Claude's request format
+- [x] T025 [US1] Modify the core chat function to use the `ModelDispatcher` to format the API payload based on the active model's adapter
+- [x] T026 [US1] Modify the core chat function to load the `persona.txt` and inject it into every API call
 
 ---
 
@@ -62,9 +62,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] In `src/vtx_cli/commands/model_command.py`, add validation to check if the requested model alias exists in the loaded config
-- [ ] T028 [US2] If the model is invalid, print an error message including the list of available model aliases from the config
-- [ ] T029 [US2] Ensure the `CliState`'s active model is not changed if the validation fails
+- [X] T027 [US2] In `src/vtx_cli/commands/model_command.py`, add validation to check if the requested model alias exists in the loaded config
+- [X] T028 [US2] If the model is invalid, print an error message including the list of available model aliases from the config
+- [X] T029 [US2] Ensure the `CliState`'s active model is not changed if the validation fails
 
 ---
 

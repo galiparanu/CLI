@@ -161,6 +161,7 @@ export async function createContentGenerator(
           new VertexAiContentGenerator(
             config.project,
             config.location || 'us-central1',
+            gcConfig.getUseModelRouter(),
           ),
           gcConfig,
         );
