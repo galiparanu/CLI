@@ -62,9 +62,9 @@
 
 ### Implementation for User Story 2
 
-- [X] T027 [US2] In `src/vtx_cli/commands/model_command.py`, add validation to check if the requested model alias exists in the loaded config
-- [X] T028 [US2] If the model is invalid, print an error message including the list of available model aliases from the config
-- [X] T029 [US2] Ensure the `CliState`'s active model is not changed if the validation fails
+- [x] T027 [US2] In `src/vtx_cli/commands/model_command.py`, add validation to check if the requested model alias exists in the loaded config
+- [x] T028 [US2] If the model is invalid, print an error message including the list of available model aliases from the config
+- [x] T029 [US2] Ensure the `CliState`'s active model is not changed if the validation fails
 
 ---
 

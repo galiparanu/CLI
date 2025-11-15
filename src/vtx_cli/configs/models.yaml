@@ -6,12 +6,12 @@ gemini:
   endpoint_id: "gemini-2.5-pro"
   adapter: "gemini"
 
-claude-opus:
+claude:
   name: "Claude Opus 4.1"
   endpoint_id: "claude-opus-4-1@20250805"
   adapter: "claude"
 
-claude-sonnet:
+claude:
   name: "Claude Sonnet 4.5"
   endpoint_id: "claude-sonnet-4-5@20250929"
   adapter: "claude"

@@ -130,7 +130,7 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       <Text bold>Select Model</Text>
       {loadError && (
         <Box marginTop={1}>
-          <Text color={theme.text.error}>Warning: {loadError}</Text>
+          <Text color={theme.status.error}>Warning: {loadError}</Text>
         </Box>
       )}
       <Box marginTop={1}>
