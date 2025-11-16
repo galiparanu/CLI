@@ -6,12 +6,12 @@ gemini:
   endpoint_id: "gemini-2.5-pro"
   adapter: "gemini"
 
-claude:
+claude-opus:
   name: "Claude Opus 4.1"
   endpoint_id: "claude-opus-4-1@20250805"
   adapter: "claude"
 
-claude:
+claude-sonnet:
   name: "Claude Sonnet 4.5"
   endpoint_id: "claude-sonnet-4-5@20250929"
   adapter: "claude"
@@ -24,6 +24,26 @@ qwen-coder:
 deepseek:
   name: "DeepSeek R1"
   endpoint_id: "deepseek-ai/deepseek-r1-0528-maas"
+  adapter: "gemini"
+
+gemini-pro:
+  name: "Gemini 1.0 Pro"
+  endpoint_id: "gemini-1.0-pro"
+  adapter: "gemini"
+
+llama3-8b:
+  name: "Llama 3 8B"
+  endpoint_id: "meta-llama/Llama-3-8b-chat-hf"
+  adapter: "gemini"
+
+gemma2-9b:
+  name: "Gemma 2 9B"
+  endpoint_id: "google/gemma2-9b-it"
+  adapter: "gemini"
+
+mistral-7b:
+  name: "Mistral 7B Instruct"
+  endpoint_id: "mistralai/Mistral-7B-Instruct-v0.2"
   adapter: "gemini"
 
 
