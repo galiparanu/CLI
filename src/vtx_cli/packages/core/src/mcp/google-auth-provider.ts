@@ -17,6 +17,12 @@ import { coreEvents } from '../utils/events.js';
 import { CredentialCache } from '../auth/CredentialCache.js';
 import type { AccessToken } from '../types/authentication.js';
 import { debugLogger } from '../utils/debugLogger.js';
+import {
+  AuthenticationError,
+  AuthErrorCode,
+} from '../errors/AuthenticationError.js';
+import { retryWithBackoff } from '../utils/retry.js';
+import { credentialManager } from '../auth/CredentialManager.js';
 
 const ALLOWED_HOSTS = [/^.+\.googleapis\.com$/, /^(.*\.)?luci\.app$/];
 
@@ -64,22 +70,69 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
     this.credentialCache = new CredentialCache(
       'GoogleCredentialProvider',
       async () => {
-        const client = await this.auth.getClient();
-        const accessTokenResponse = await client.getAccessToken();
+        const shouldRetry = (e: Error) =>
+          e instanceof AuthenticationError &&
+          e.code === AuthErrorCode.NETWORK_ERROR;
 
-        if (!accessTokenResponse.token) {
-          throw new Error('Failed to get access token from Google ADC');
-        }
+        const fetchToken = async (): Promise<AccessToken> => {
+          try {
+            const client = await this.auth.getClient();
+            const accessTokenResponse = await client.getAccessToken();
 
-        const accessToken: AccessToken = {
-          token: accessTokenResponse.token,
-          tokenType: 'Bearer',
-          expiryTime: client.credentials?.expiry_date ?? undefined,
+            if (!accessTokenResponse.token) {
+              throw new AuthenticationError(
+                AuthErrorCode.INVALID_CREDENTIALS,
+                'Failed to get access token from Google ADC',
+                [
+                  'Run `gcloud auth application-default login`',
+                  'Ensure your gcloud user has necessary IAM permissions',
+                  'Check that Vertex AI API is enabled for the project',
+                ],
+              );
+            }
+
+            const accessToken: AccessToken = {
+              token: accessTokenResponse.token,
+              tokenType: 'Bearer',
+              expiryTime: client.credentials?.expiry_date ?? undefined,
+            };
+
+            return accessToken;
+          } catch (error) {
+            if (error instanceof AuthenticationError) {
+              throw error;
+            }
+
+            if (error instanceof Error) {
+              if (
+                error.message.includes('ENOTFOUND') ||
+                error.message.includes('ETIMEDOUT')
+              ) {
+                throw AuthenticationError.networkError(error);
+              }
+            }
+
+            throw new AuthenticationError(
+              AuthErrorCode.INVALID_CREDENTIALS,
+              'Failed to authenticate with Google ADC',
+              [
+                'Run `gcloud auth application-default login`',
+                'Check network connectivity',
+                'Ensure your gcloud user has necessary permissions',
+              ],
+              error instanceof Error ? error : undefined,
+            );
+          }
         };
 
-        return accessToken;
+        return await retryWithBackoff(fetchToken, {
+          shouldRetryOnError: shouldRetry,
+        });
       },
     );
+
+    // Register with credential manager for cleanup on exit
+    credentialManager.registerProvider(this);
   }
 
   clientInformation(): OAuthClientInformation | undefined {

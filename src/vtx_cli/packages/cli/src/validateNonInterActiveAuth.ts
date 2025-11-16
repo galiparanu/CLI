@@ -52,7 +52,9 @@ function detectCredentialSource(): CredentialSource | null {
   // Handle multiple methods configured
   if (detectedSources.length > 1) {
     debugLogger.debug(
-      `Multiple credential sources detected: ${detectedSources.join(', ')}. Using priority order.`,
+      `Multiple credential sources detected: ${detectedSources.join(
+        ', ',
+      )}. Using priority order.`,
     );
   }
 

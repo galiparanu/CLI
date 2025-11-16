@@ -22,6 +22,7 @@ export * from './types/authentication.js';
 export * from './errors/AuthenticationError.js';
 export * from './auth/ServiceAccountProvider.js';
 export * from './auth/APIKeyProvider.js';
+export { credentialManager } from './auth/CredentialManager.js';
 
 // Export Commands logic
 export * from './commands/extensions.js';

@@ -12,6 +12,7 @@ import type {
   EmbedContentResponse,
   EmbedContentParameters,
 } from '@google/genai';
+import { GoogleAuth } from 'google-auth-library';
 import { GoogleGenAI } from '@google/genai';
 import { createCodeAssistContentGenerator } from '../code_assist/codeAssist.js';
 import type { Config } from '../config/config.js';
@@ -23,6 +24,12 @@ import { InstallationManager } from '../utils/installationManager.js';
 import { FakeContentGenerator } from './fakeContentGenerator.js';
 import { RecordingContentGenerator } from './recordingContentGenerator.js';
 import { VertexAiContentGenerator } from './vertexAiContentGenerator.js';
+import { CredentialSource } from '../types/authentication.js';
+import type { APIKeyProvider } from '../auth/APIKeyProvider.js';
+import type { ServiceAccountProvider } from '../auth/ServiceAccountProvider.js';
+import type { GoogleCredentialProvider } from '../mcp/google-auth-provider.js';
+import { debugLogger } from '../utils/debugLogger.js';
+import { redact } from '../utils/redact.js';
 
 /**
  * Interface abstracting the core functionalities for generating content and counting tokens.
@@ -60,24 +67,54 @@ export type ContentGeneratorConfig = {
   proxy?: string;
   project?: string;
   location?: string;
+  credentialSource?: CredentialSource;
 };
+
+function getEnv(key: string): string | undefined {
+  const value = process.env[key];
+  return !value || value.trim() === '' ? undefined : value;
+}
+
+// Keep track of the last detected environment variables
+let lastEnv: NodeJS.ProcessEnv | null = null;
+
+// Cache for credential providers
+const providerCache = new Map<
+  string,
+  APIKeyProvider | ServiceAccountProvider | GoogleCredentialProvider
+>();
+
+/**
+ * Clear credential provider cache if environment variables have changed
+ */
+function checkAndClearCache() {
+  if (lastEnv && JSON.stringify(process.env) !== JSON.stringify(lastEnv)) {
+    debugLogger.debug(
+      'Environment variables changed, clearing credential cache.',
+    );
+    providerCache.forEach(provider => provider.clearCredentials());
+    providerCache.clear();
+  }
+  lastEnv = { ...process.env };
+}
 
 export async function createContentGeneratorConfig(
   config: Config,
   authType: AuthType | undefined,
+  credentialSource?: CredentialSource,
 ): Promise<ContentGeneratorConfig> {
-  const geminiApiKey =
-    (await loadApiKey()) || process.env['GEMINI_API_KEY'] || undefined;
-  const googleApiKey = process.env['GOOGLE_API_KEY'] || undefined;
+  checkAndClearCache();
+
+  const geminiApiKey = (await loadApiKey()) || getEnv('GEMINI_API_KEY');
+  const googleApiKey = getEnv('GOOGLE_API_KEY');
   const googleCloudProject =
-    process.env['GOOGLE_CLOUD_PROJECT'] ||
-    process.env['GOOGLE_CLOUD_PROJECT_ID'] ||
-    undefined;
-  const googleCloudLocation = process.env['GOOGLE_CLOUD_LOCATION'] || undefined;
+    getEnv('GOOGLE_CLOUD_PROJECT') || getEnv('GOOGLE_CLOUD_PROJECT_ID');
+  const googleCloudLocation = getEnv('GOOGLE_CLOUD_LOCATION');
 
   const contentGeneratorConfig: ContentGeneratorConfig = {
     authType,
     proxy: config?.getProxy(),
+    credentialSource,
   };
 
   // If we are using Google auth or we are in Cloud Shell, there is nothing else to validate for now
@@ -97,7 +134,7 @@ export async function createContentGeneratorConfig(
 
   if (
     authType === AuthType.USE_VERTEX_AI &&
-    (googleApiKey || googleCloudProject)
+    (googleApiKey || googleCloudProject || credentialSource)
   ) {
     contentGeneratorConfig.apiKey = googleApiKey;
     contentGeneratorConfig.vertexai = true;
@@ -156,33 +193,48 @@ export async function createContentGenerator(
       const httpOptions = { headers };
 
       // Use native Vertex AI SDK when vertexai flag is true and project is configured
-      if (config.vertexai && config.project) {
-        return new LoggingContentGenerator(
-          new VertexAiContentGenerator(
-            config.project,
-            config.location || 'us-central1',
-            gcConfig.getUseModelRouter(),
-          ),
-          gcConfig,
-        );
-      }
+      if (config.vertexai && (config.project || config.credentialSource)) {
+        let provider:
+          | APIKeyProvider
+          | ServiceAccountProvider
+          | GoogleCredentialProvider
+          | undefined;
+        let auth: GoogleAuth | undefined;
 
-      // Fallback to @google/genai SDK
-      const googleGenAI = new GoogleGenAI({
-        apiKey: config.apiKey === '' ? undefined : config.apiKey,
-        vertexai: config.vertexai,
-        httpOptions,
-      });
-      return new LoggingContentGenerator(googleGenAI.models, gcConfig);
-    }
-    throw new Error(
-      `Error creating contentGenerator: Unsupported authType: ${config.authType}`,
-    );
-  })();
-
-  if (gcConfig.recordResponses) {
-    return new RecordingContentGenerator(generator, gcConfig.recordResponses);
-  }
-
-  return generator;
-}
+        if (config.credentialSource) {
+          const cacheKey = `${config.credentialSource}:${process.env['GOOGLE_APPLICATION_CREDENTIALS']}`;
+          if (providerCache.has(cacheKey)) {
+            provider = providerCache.get(cacheKey);
+          } else {
+            switch (config.credentialSource) {
+              case CredentialSource.API_KEY:
+                if (config.apiKey) {
+                  provider = new APIKeyProvider(config.apiKey);
+                  auth = new GoogleAuth({
+                    authOptions: { apiKey: config.apiKey },
+                  });
+                }
+                break;
+              case CredentialSource.SERVICE_ACCOUNT_FILE:
+                if (process.env['GOOGLE_APPLICATION_CREDENTIALS']) {
+                  const saPath = process.env['GOOGLE_APPLICATION_CREDENTIALS'];
+                  provider = new ServiceAccountProvider(saPath);
+                  auth = new GoogleAuth({
+                    keyFilename: saPath,
+                    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+                  });
+                }
+                break;
+              case CredentialSource.ADC_GCLOUD:
+              case CredentialSource.COMPUTE_METADATA: {
+                const mcpConfig = gcConfig.getMcpConfig();
+                if (mcpConfig) {
+                  provider = new GoogleCredentialProvider(mcpConfig);
+                  auth = new GoogleAuth({
+                    scopes: mcpConfig.oauth?.scopes,
+                  });
+                }
+                break;
+              }
+            }
+            if

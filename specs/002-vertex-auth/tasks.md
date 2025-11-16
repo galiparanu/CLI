@@ -149,37 +149,37 @@
 
 ### Edge Case Handling
 
-- [ ] T061 [P] Handle multiple authentication methods configured simultaneously (priority-based selection)
-- [ ] T062 [P] Handle network interruptions during authentication (retry with exponential backoff)
-- [ ] T063 [P] Handle credential switch mid-session (clear cache on env change detection)
-- [ ] T064 [P] Handle Vertex AI API temporarily unavailable (retry with backoff, clear error)
-- [ ] T065 [P] Handle empty string vs undefined environment variables (normalize to undefined)
-- [ ] T066 [P] Handle restricted environments (CI/CD, containers) without interactive capabilities
-- [ ] T067 [P] Handle Vertex AI API disabled for project (API_NOT_ENABLED error with remediation)
-- [ ] T068 [P] Handle different regions in GOOGLE_CLOUD_LOCATION (global vs regional endpoints)
+- [x] T061 [P] Handle multiple authentication methods configured simultaneously (priority-based selection)
+- [x] T062 [P] Handle network interruptions during authentication (retry with exponential backoff)
+- [x] T063 [P] Handle credential switch mid-session (clear cache on env change detection)
+- [x] T064 [P] Handle Vertex AI API temporarily unavailable (retry with backoff, clear error)
+- [x] T065 [P] Handle empty string vs undefined environment variables (normalize to undefined)
+- [x] T066 [P] Handle restricted environments (CI/CD, containers) without interactive capabilities
+- [x] T067 [P] Handle Vertex AI API disabled for project (API_NOT_ENABLED error with remediation)
+- [x] T068 [P] Handle different regions in GOOGLE_CLOUD_LOCATION (global vs regional endpoints)
 
 ### Security & Performance
 
-- [ ] T069 [P] Ensure credentials never logged (replace with [REDACTED] in logs)
-- [ ] T070 [P] Ensure tokens stored in memory only (never persisted to disk)
-- [ ] T071 [P] Implement secure credential storage via HybridTokenStorage for API keys
-- [ ] T072 [P] Set restrictive file permissions (0600) for cached credential files
-- [ ] T073 [P] Ensure HTTPS used for all authentication requests
-- [ ] T074 [P] Clear credentials from memory on application exit
-- [ ] T075 [P] Clear credentials from memory on explicit logout
-- [ ] T076 [P] Optimize token caching to achieve <1ms cache hit time
-- [ ] T077 [P] Ensure authentication completes in <5 seconds
-- [ ] T078 [P] Ensure token refresh completes in <2 seconds
+- [x] T069 [P] Ensure credentials never logged (replace with [REDACTED] in logs)
+- [x] T070 [P] Ensure tokens stored in memory only (never persisted to disk)
+- [x] T071 [P] Implement secure credential storage via HybridTokenStorage for API keys
+- [x] T072 [P] Set restrictive file permissions (0600) for cached credential files
+- [x] T073 [P] Ensure HTTPS used for all authentication requests
+- [x] T074 [P] Clear credentials from memory on application exit
+- [x] T075 [P] Clear credentials from memory on explicit logout
+- [x] T076 [P] Optimize token caching to achieve <1ms cache hit time
+- [x] T077 [P] Ensure authentication completes in <5 seconds
+- [x] T078 [P] Ensure token refresh completes in <2 seconds
 
 ### Documentation & Validation
 
-- [ ] T079 [P] Update README.md with new authentication environment variables
-- [ ] T080 [P] Create migration guide for existing users in docs/
-- [ ] T081 [P] Update authentication.md documentation with new methods
-- [ ] T082 [P] Add examples for each authentication method in docs/
-- [ ] T083 Run quickstart.md validation scenarios
-- [ ] T084 Code cleanup and refactoring for consistency
-- [ ] T085 Review all error messages for clarity and actionability
+- [x] T079 [P] Update README.md with new authentication environment variables
+- [x] T080 [P] Create migration guide for existing users in docs/
+- [x] T081 [P] Update authentication.md documentation with new methods
+- [x] T082 [P] Add examples for each authentication method in docs/
+- [x] T083 Run quickstart.md validation scenarios
+- [x] T084 Code cleanup and refactoring for consistency
+- [x] T085 Review all error messages for clarity and actionability
 
 ---
 

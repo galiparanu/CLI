@@ -143,14 +143,16 @@ export class AuthenticationError extends Error {
    * Create error for API not enabled
    */
   static apiNotEnabled(projectId: string): AuthenticationError {
+    const remediationSteps = [
+      `Enable API: gcloud services enable aiplatform.googleapis.com --project=${projectId}`,
+      'Or visit: https://console.cloud.google.com/apis/library/aiplatform.googleapis.com',
+      'Wait a few minutes after enabling for changes to propagate',
+    ];
+
     return new AuthenticationError(
       AuthErrorCode.API_NOT_ENABLED,
       `Vertex AI API not enabled for project ${projectId}`,
-      [
-        `Enable API: gcloud services enable aiplatform.googleapis.com --project=${projectId}`,
-        'Or visit: https://console.cloud.google.com/apis/library/aiplatform.googleapis.com',
-        'Wait a few minutes after enabling for changes to propagate',
-      ],
+      remediationSteps,
     );
   }
 

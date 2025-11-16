@@ -13,11 +13,14 @@ import type {
   EmbedContentParameters,
 } from '@google/genai';
 import { VertexAI } from '@google-cloud/vertexai';
+import type { GoogleAuth } from 'google-auth-library';
 import type { ContentGenerator } from './contentGenerator.js';
 import type { UserTierId } from '../code_assist/types.js';
 import { ModelDispatcher } from '../services/modelDispatcher.js';
 import { ModelService } from '../services/modelService.js';
 import { loadPersona } from '../utils/persona.js';
+import { retryWithBackoff } from '../utils/retry.js';
+import { AuthenticationError, AuthErrorCode } from '../errors/AuthenticationError.js';
 
 /**
  * Vertex AI implementation of ContentGenerator using @google-cloud/vertexai SDK.
@@ -35,10 +38,12 @@ export class VertexAiContentGenerator implements ContentGenerator {
     project: string,
     location: string = 'us-central1',
     useModelRouter: boolean = false,
+    auth?: GoogleAuth,
   ) {
     this.vertexAI = new VertexAI({
       project,
       location,
+      googleAuth: auth,
     });
     this.useModelRouter = useModelRouter;
     this.persona = loadPersona();
@@ -60,21 +65,29 @@ export class VertexAiContentGenerator implements ContentGenerator {
     request: GenerateContentParameters,
     userPromptId: string,
   ): Promise<GenerateContentResponse> {
-    const formattedRequest = this.formatRequestForModel(request);
+    const fn = async () => {
+      const formattedRequest = this.formatRequestForModel(request);
 
-    const model = this.vertexAI.getGenerativeModel({
-      model: formattedRequest.model,
-      safetySettings: this.convertSafetySettings(formattedRequest.config?.safetySettings),
-      generationConfig: (formattedRequest.config as any)?.generationConfig,
+      const model = this.vertexAI.getGenerativeModel({
+        model: formattedRequest.model,
+        safetySettings: this.convertSafetySettings(
+          formattedRequest.config?.safetySettings,
+        ),
+        generationConfig: (formattedRequest.config as any)?.generationConfig,
+      });
+
+      const result = await model.generateContent({
+        contents: formattedRequest.contents as any,
+        systemInstruction: formattedRequest.config?.systemInstruction as any,
+      });
+
+      // Convert Vertex AI response to match @google/genai format
+      return result.response as unknown as GenerateContentResponse;
+    };
+
+    return retryWithBackoff(fn, {
+      shouldRetryOnError: this.shouldRetry,
     });
-
-    const result = await model.generateContent({
-      contents: formattedRequest.contents as any,
-      systemInstruction: formattedRequest.config?.systemInstruction as any,
-    });
-
-    // Convert Vertex AI response to match @google/genai format
-    return result.response as unknown as GenerateContentResponse;
   }
 
   async generateContentStream(
@@ -85,7 +98,9 @@ export class VertexAiContentGenerator implements ContentGenerator {
 
     const model = this.vertexAI.getGenerativeModel({
       model: formattedRequest.model,
-      safetySettings: this.convertSafetySettings(formattedRequest.config?.safetySettings),
+      safetySettings: this.convertSafetySettings(
+        formattedRequest.config?.safetySettings,
+      ),
       generationConfig: (formattedRequest.config as any)?.generationConfig,
     });
 
@@ -101,39 +116,55 @@ export class VertexAiContentGenerator implements ContentGenerator {
     })();
   }
 
-  async countTokens(request: CountTokensParameters): Promise<CountTokensResponse> {
-    const model = this.vertexAI.getGenerativeModel({
-      model: request.model,
-    });
+  async countTokens(
+    request: CountTokensParameters,
+  ): Promise<CountTokensResponse> {
+    const fn = async () => {
+      const model = this.vertexAI.getGenerativeModel({
+        model: request.model,
+      });
 
-    const result = await model.countTokens({
-      contents: request.contents as any,
-    });
+      const result = await model.countTokens({
+        contents: request.contents as any,
+      });
 
-    return {
-      totalTokens: result.totalTokens,
-    } as CountTokensResponse;
+      return {
+        totalTokens: result.totalTokens,
+      } as CountTokensResponse;
+    };
+
+    return retryWithBackoff(fn, {
+      shouldRetryOnError: this.shouldRetry,
+    });
   }
 
-  async embedContent(request: EmbedContentParameters): Promise<EmbedContentResponse> {
-    // Vertex AI uses a different API for embeddings
-    // We'll use the text-embedding model - this is a placeholder implementation
-    const embeddings: Array<{ values: number[] }> = [];
-    
-    // Process each content item - handle both string and array formats
-    const contentsArray = Array.isArray(request.contents) 
-      ? request.contents 
-      : [request.contents];
-    
-    for (const _ of contentsArray) {
-      // Note: embedContent API may not be available in all SDK versions
-      // This is a placeholder implementation
-      embeddings.push({ values: [] });
-    }
+  async embedContent(
+    request: EmbedContentParameters,
+  ): Promise<EmbedContentResponse> {
+    const fn = async () => {
+      // Vertex AI uses a different API for embeddings
+      // We'll use the text-embedding model - this is a placeholder implementation
+      const embeddings: Array<{ values: number[] }> = [];
 
-    return {
-      embeddings,
-    } as EmbedContentResponse;
+      // Process each content item - handle both string and array formats
+      const contentsArray = Array.isArray(request.contents)
+        ? request.contents
+        : [request.contents];
+
+      for (const _ of contentsArray) {
+        // Note: embedContent API may not be available in all SDK versions
+        // This is a placeholder implementation
+        embeddings.push({ values: [] });
+      }
+
+      return {
+        embeddings,
+      } as EmbedContentResponse;
+    };
+
+    return retryWithBackoff(fn, {
+      shouldRetryOnError: this.shouldRetry,
+    });
   }
 
   /**
@@ -159,7 +190,7 @@ export class VertexAiContentGenerator implements ContentGenerator {
 
     // Try to find the model configuration by alias
     const modelConfig = this.modelService.getModel(request.model);
-    
+
     if (modelConfig) {
       // Use the dispatcher to format the request with the appropriate adapter
       return this.modelDispatcher.formatRequest(modelConfig, request, this.persona);
@@ -187,5 +218,16 @@ export class VertexAiContentGenerator implements ContentGenerator {
 
     // Convert @google/genai safety settings to Vertex AI format if needed
     return settings;
+  }
+
+  private shouldRetry(error: Error): boolean {
+    if (error instanceof AuthenticationError) {
+      return error.code === AuthErrorCode.NETWORK_ERROR;
+    }
+    // Check for 5xx server errors
+    if ('code' in error && typeof error.code === 'number' && error.code >= 500) {
+      return true;
+    }
+    return false;
   }
 }
