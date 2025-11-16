@@ -75,20 +75,20 @@
 
 ### Implementation for User Story 2
 
-- [ ] T024 [P] [US2] Implement structured error messages in AuthenticationError class for MISSING_ENV errors
-- [ ] T025 [P] [US2] Implement structured error messages in AuthenticationError class for INVALID_CREDENTIALS errors
-- [ ] T026 [P] [US2] Implement structured error messages in AuthenticationError class for PERMISSION_DENIED errors
-- [ ] T027 [P] [US2] Implement structured error messages in AuthenticationError class for API_NOT_ENABLED errors
-- [ ] T028 [P] [US2] Implement structured error messages in AuthenticationError class for FILE_NOT_FOUND errors
-- [ ] T029 [P] [US2] Implement structured error messages in AuthenticationError class for INVALID_JSON errors
-- [ ] T030 [US2] Enhance validateAuthMethod() error messages with remediation steps in src/vtx_cli/packages/cli/src/config/auth.ts
-- [ ] T031 [US2] Add error handling for missing GOOGLE_CLOUD_PROJECT with remediation in src/vtx_cli/packages/cli/src/config/auth.ts
-- [ ] T032 [US2] Add error handling for missing GOOGLE_CLOUD_LOCATION with remediation in src/vtx_cli/packages/cli/src/config/auth.ts
-- [ ] T033 [US2] Add error handling for invalid service account JSON with remediation in validateServiceAccountFile()
-- [ ] T034 [US2] Add error handling for permission errors (401/403) in credential providers with IAM role suggestions
-- [ ] T035 [US2] Map HTTP error codes to AuthenticationError codes in credential providers
-- [ ] T036 [US2] Add error handling for API not enabled (404) with gcloud command remediation
-- [ ] T037 [US2] Update error display formatting to show remediation steps clearly
+- [x] T024 [P] [US2] Implement structured error messages in AuthenticationError class for MISSING_ENV errors
+- [x] T025 [P] [US2] Implement structured error messages in AuthenticationError class for INVALID_CREDENTIALS errors
+- [x] T026 [P] [US2] Implement structured error messages in AuthenticationError class for PERMISSION_DENIED errors
+- [x] T027 [P] [US2] Implement structured error messages in AuthenticationError class for API_NOT_ENABLED errors
+- [x] T028 [P] [US2] Implement structured error messages in AuthenticationError class for FILE_NOT_FOUND errors
+- [x] T029 [P] [US2] Implement structured error messages in AuthenticationError class for INVALID_JSON errors
+- [x] T030 [US2] Enhance validateAuthMethod() error messages with remediation steps in src/vtx_cli/packages/cli/src/config/auth.ts
+- [x] T031 [US2] Add error handling for missing GOOGLE_CLOUD_PROJECT with remediation in src/vtx_cli/packages/cli/src/config/auth.ts
+- [x] T032 [US2] Add error handling for missing GOOGLE_CLOUD_LOCATION with remediation in src/vtx_cli/packages/cli/src/config/auth.ts
+- [x] T033 [US2] Add error handling for invalid service account JSON with remediation in validateServiceAccountFile()
+- [x] T034 [US2] Add error handling for permission errors (401/403) in credential providers with IAM role suggestions
+- [x] T035 [US2] Map HTTP error codes to AuthenticationError codes in credential providers
+- [x] T036 [US2] Add error handling for API not enabled (404) with gcloud command remediation
+- [x] T037 [US2] Update error display formatting to show remediation steps clearly
 
 **Checkpoint**: All authentication failures now provide clear, actionable error messages
 
@@ -102,17 +102,17 @@
 
 ### Implementation for User Story 3
 
-- [ ] T038 [US3] Implement priority-based detection in detectCredentialSource() - API Key > Service Account > ADC > Compute
-- [ ] T039 [US3] Add file existence check for GOOGLE_APPLICATION_CREDENTIALS in detection logic
-- [ ] T040 [US3] Add ADC file existence check (~/.config/gcloud/application_default_credentials.json) in detection logic
-- [ ] T041 [US3] Add GCE/GKE metadata detection (check environment variables) in detection logic
-- [ ] T042 [US3] Ensure detection completes in <100ms (no network calls)
-- [ ] T043 [US3] Update createContentGeneratorConfig() to select provider based on detected source
-- [ ] T044 [US3] Add integration between detection and provider instantiation
-- [ ] T045 [US3] Add logging at DEBUG level for detected authentication method
-- [ ] T046 [US3] Handle case where multiple methods are configured (priority wins)
-- [ ] T047 [US3] Handle case where no methods are configured (clear error)
-- [ ] T048 [US3] Validate each detected method before use
+- [x] T038 [US3] Implement priority-based detection in detectCredentialSource() - API Key > Service Account > ADC > Compute
+- [x] T039 [US3] Add file existence check for GOOGLE_APPLICATION_CREDENTIALS in detection logic
+- [x] T040 [US3] Add ADC file existence check (~/.config/gcloud/application_default_credentials.json) in detection logic
+- [x] T041 [US3] Add GCE/GKE metadata detection (check environment variables) in detection logic
+- [x] T042 [US3] Ensure detection completes in <100ms (no network calls)
+- [x] T043 [US3] Update createContentGeneratorConfig() to select provider based on detected source
+- [x] T044 [US3] Add integration between detection and provider instantiation
+- [x] T045 [US3] Add logging at DEBUG level for detected authentication method
+- [x] T046 [US3] Handle case where multiple methods are configured (priority wins)
+- [x] T047 [US3] Handle case where no methods are configured (clear error)
+- [x] T048 [US3] Validate each detected method before use
 
 **Checkpoint**: System automatically detects and uses correct authentication method for all scenarios
 
@@ -126,18 +126,18 @@
 
 ### Implementation for User Story 4
 
-- [ ] T049 [P] [US4] Implement token expiry tracking in CredentialCache class in src/vtx_cli/packages/core/src/auth/CredentialCache.ts
-- [ ] T050 [P] [US4] Implement isValid() method checking expiry with 5-minute buffer in CredentialCache
-- [ ] T051 [US4] Implement proactive refresh when token < 5 minutes remaining in GoogleCredentialProvider
-- [ ] T052 [US4] Implement proactive refresh when token < 5 minutes remaining in ServiceAccountProvider
-- [ ] T053 [US4] Add grace period check - never use token with <30 seconds remaining
-- [ ] T054 [US4] Implement retry logic for failed refresh (retry once after 1 second)
-- [ ] T055 [US4] Implement fallback - clear cache and fetch new token if retry fails
-- [ ] T056 [US4] Add concurrent call safety with async/await in credential providers
-- [ ] T057 [US4] Ensure cached token returned for concurrent calls within cache window
-- [ ] T058 [US4] Add logging for token refresh events at DEBUG level
-- [ ] T059 [US4] Implement clearCredentials() method in all providers to force re-authentication
-- [ ] T060 [US4] Test credential refresh maintains session for 1000+ consecutive requests
+- [x] T049 [P] [US4] Implement token expiry tracking in CredentialCache class in src/vtx_cli/packages/core/src/auth/CredentialCache.ts
+- [x] T050 [P] [US4] Implement isValid() method checking expiry with 5-minute buffer in CredentialCache
+- [x] T051 [US4] Implement proactive refresh when token < 5 minutes remaining in GoogleCredentialProvider
+- [x] T052 [US4] Implement proactive refresh when token < 5 minutes remaining in ServiceAccountProvider
+- [x] T053 [US4] Add grace period check - never use token with <30 seconds remaining
+- [x] T054 [US4] Implement retry logic for failed refresh (retry once after 1 second)
+- [x] T055 [US4] Implement fallback - clear cache and fetch new token if retry fails
+- [x] T056 [US4] Add concurrent call safety with async/await in credential providers
+- [x] T057 [US4] Ensure cached token returned for concurrent calls within cache window
+- [x] T058 [US4] Add logging for token refresh events at DEBUG level
+- [x] T059 [US4] Implement clearCredentials() method in all providers to force re-authentication
+- [x] T060 [US4] Test credential refresh maintains session for 1000+ consecutive requests
 
 **Checkpoint**: Automatic credential refresh working, long-running sessions maintain uninterrupted access
 

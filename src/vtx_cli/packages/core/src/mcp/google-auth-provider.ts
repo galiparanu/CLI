@@ -13,15 +13,16 @@ import type {
 } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { GoogleAuth } from 'google-auth-library';
 import type { MCPServerConfig } from '../config/config.js';
-import { FIVE_MIN_BUFFER_MS } from './oauth-utils.js';
 import { coreEvents } from '../utils/events.js';
+import { CredentialCache } from '../auth/CredentialCache.js';
+import type { AccessToken } from '../types/authentication.js';
+import { debugLogger } from '../utils/debugLogger.js';
 
 const ALLOWED_HOSTS = [/^.+\.googleapis\.com$/, /^(.*\.)?luci\.app$/];
 
 export class GoogleCredentialProvider implements OAuthClientProvider {
   private readonly auth: GoogleAuth;
-  private cachedToken?: OAuthTokens;
-  private tokenExpiryTime?: number;
+  private readonly credentialCache: CredentialCache;
 
   // Properties required by OAuthClientProvider, with no-op values
   readonly redirectUrl = '';
@@ -58,6 +59,27 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
     this.auth = new GoogleAuth({
       scopes,
     });
+
+    // Initialize credential cache with refresh callback
+    this.credentialCache = new CredentialCache(
+      'GoogleCredentialProvider',
+      async () => {
+        const client = await this.auth.getClient();
+        const accessTokenResponse = await client.getAccessToken();
+
+        if (!accessTokenResponse.token) {
+          throw new Error('Failed to get access token from Google ADC');
+        }
+
+        const accessToken: AccessToken = {
+          token: accessTokenResponse.token,
+          tokenType: 'Bearer',
+          expiryTime: client.credentials?.expiry_date ?? undefined,
+        };
+
+        return accessToken;
+      },
+    );
   }
 
   clientInformation(): OAuthClientInformation | undefined {
@@ -69,42 +91,23 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
   }
 
   async tokens(): Promise<OAuthTokens | undefined> {
-    // check for a valid, non-expired cached token.
-    if (
-      this.cachedToken &&
-      this.tokenExpiryTime &&
-      Date.now() < this.tokenExpiryTime - FIVE_MIN_BUFFER_MS
-    ) {
-      return this.cachedToken;
-    }
+    try {
+      const accessToken = await this.credentialCache.getToken();
+      
+      const oauthTokens: OAuthTokens = {
+        access_token: accessToken.token,
+        token_type: 'Bearer',
+      };
 
-    // Clear invalid/expired cache.
-    this.cachedToken = undefined;
-    this.tokenExpiryTime = undefined;
-
-    const client = await this.auth.getClient();
-    const accessTokenResponse = await client.getAccessToken();
-
-    if (!accessTokenResponse.token) {
+      return oauthTokens;
+    } catch (error) {
       coreEvents.emitFeedback(
         'error',
-        'Failed to get access token from Google ADC',
+        `Failed to get access token from Google ADC: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
+      debugLogger.debug('Google ADC token fetch error:', error);
       return undefined;
     }
-
-    const newToken: OAuthTokens = {
-      access_token: accessTokenResponse.token,
-      token_type: 'Bearer',
-    };
-
-    const expiryTime = client.credentials?.expiry_date;
-    if (expiryTime) {
-      this.tokenExpiryTime = expiryTime;
-      this.cachedToken = newToken;
-    }
-
-    return newToken;
   }
 
   saveTokens(_tokens: OAuthTokens): void {
@@ -122,5 +125,19 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
   codeVerifier(): string {
     // No-op
     return '';
+  }
+
+  /**
+   * Clear cached credentials to force re-authentication
+   */
+  clearCredentials(): void {
+    this.credentialCache.clearCache();
+  }
+
+  /**
+   * Check if provider is currently authenticated
+   */
+  isAuthenticated(): boolean {
+    return this.credentialCache.isAuthenticated();
   }
 }

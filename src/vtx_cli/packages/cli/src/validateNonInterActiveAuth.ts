@@ -5,7 +5,7 @@
  */
 
 import type { Config } from '@google/gemini-cli-core';
-import { AuthType, debugLogger, OutputFormat, CredentialSource } from '@google/gemini-cli-core';
+import { AuthType, debugLogger, OutputFormat, CredentialSource, AuthenticationError, AuthErrorCode } from '@google/gemini-cli-core';
 import { USER_SETTINGS_PATH } from './config/settings.js';
 import { validateAuthMethod } from './config/auth.js';
 import { type LoadedSettings } from './config/settings.js';
@@ -20,20 +20,18 @@ import * as os from 'node:os';
  * @returns Detected credential source or null if none found
  */
 function detectCredentialSource(): CredentialSource | null {
-  // Priority 1: API Key
+  const detectedSources: CredentialSource[] = [];
+
+  // Check all possible sources
   if (process.env['GOOGLE_API_KEY']) {
-    debugLogger.debug('Detected credential source: API_KEY');
-    return CredentialSource.API_KEY;
+    detectedSources.push(CredentialSource.API_KEY);
   }
 
-  // Priority 2: Service Account file
   const saPath = process.env['GOOGLE_APPLICATION_CREDENTIALS'];
   if (saPath && fs.existsSync(saPath)) {
-    debugLogger.debug('Detected credential source: SERVICE_ACCOUNT_FILE');
-    return CredentialSource.SERVICE_ACCOUNT_FILE;
+    detectedSources.push(CredentialSource.SERVICE_ACCOUNT_FILE);
   }
 
-  // Priority 3: ADC from gcloud
   const adcPath = path.join(
     os.homedir(),
     '.config',
@@ -41,20 +39,31 @@ function detectCredentialSource(): CredentialSource | null {
     'application_default_credentials.json',
   );
   if (fs.existsSync(adcPath)) {
-    debugLogger.debug('Detected credential source: ADC_GCLOUD');
-    return CredentialSource.ADC_GCLOUD;
+    detectedSources.push(CredentialSource.ADC_GCLOUD);
   }
 
-  // Priority 4: Compute metadata (GCE/GKE)
-  // Don't make network call here, just check environment indicators
   if (
     process.env['GCE_METADATA_HOST'] ||
     process.env['KUBERNETES_SERVICE_HOST']
   ) {
-    debugLogger.debug('Detected credential source: COMPUTE_METADATA');
-    return CredentialSource.COMPUTE_METADATA;
+    detectedSources.push(CredentialSource.COMPUTE_METADATA);
   }
 
+  // Handle multiple methods configured
+  if (detectedSources.length > 1) {
+    debugLogger.debug(
+      `Multiple credential sources detected: ${detectedSources.join(', ')}. Using priority order.`,
+    );
+  }
+
+  // Return highest priority source (already in priority order)
+  if (detectedSources.length > 0) {
+    const selectedSource = detectedSources[0];
+    debugLogger.debug(`Selected credential source: ${selectedSource}`);
+    return selectedSource;
+  }
+
+  // No credential source found
   debugLogger.debug('No credential source detected');
   return null;
 }
@@ -65,6 +74,28 @@ function getAuthTypeFromEnv(): AuthType | undefined {
   }
   if (process.env['GOOGLE_GENAI_USE_VERTEXAI'] === 'true') {
     const credSource = detectCredentialSource();
+    
+    // Handle case where no credentials are configured
+    if (!credSource && !process.env['GOOGLE_API_KEY']) {
+      const hasProjectConfig = !!process.env['GOOGLE_CLOUD_PROJECT'];
+      
+      if (hasProjectConfig) {
+        // Project configured but no credentials found
+        throw new AuthenticationError(
+          AuthErrorCode.MISSING_ENV,
+          'No credentials found for Vertex AI authentication',
+          [
+            'Vertex AI requires one of the following:',
+            '  • GOOGLE_API_KEY environment variable (for API key authentication)',
+            '  • GOOGLE_APPLICATION_CREDENTIALS pointing to a service account JSON file',
+            '  • Application Default Credentials via: gcloud auth application-default login',
+            '  • Running on GCE/GKE with default service account',
+            'Configure credentials and try again',
+          ],
+        );
+      }
+    }
+    
     if (credSource) {
       debugLogger.debug(
         `Using Vertex AI with credential source: ${credSource}`,

@@ -16,6 +16,7 @@ import {
   FatalCancellationError,
   FatalToolExecutionError,
   isFatalToolError,
+  AuthenticationError,
 } from '@google/gemini-cli-core';
 
 export function getErrorMessage(error: unknown): string {
@@ -69,6 +70,37 @@ export function handleError(
   config: Config,
   customErrorCode?: string | number,
 ): never {
+  // Handle AuthenticationError with special formatting
+  if (error instanceof AuthenticationError) {
+    const formattedError = formatAuthenticationError(error);
+    
+    if (config.getOutputFormat() === OutputFormat.STREAM_JSON) {
+      const streamFormatter = new StreamJsonFormatter();
+      const metrics = uiTelemetryService.getMetrics();
+
+      streamFormatter.emitEvent({
+        type: JsonStreamEventType.RESULT,
+        timestamp: new Date().toISOString(),
+        status: 'error',
+        error: {
+          type: 'AuthenticationError',
+          message: `[${error.code}] ${error.message}\nRemediation steps: ${error.remediationSteps.join('; ')}`,
+        },
+        stats: streamFormatter.convertToStreamStats(metrics, 0),
+      });
+
+      process.exit(1);
+    } else if (config.getOutputFormat() === OutputFormat.JSON) {
+      const formatter = new JsonFormatter();
+      const formattedJsonError = formatter.formatError(error, error.code);
+      console.error(formattedJsonError);
+      process.exit(1);
+    } else {
+      console.error(formattedError);
+      process.exit(1);
+    }
+  }
+
   const errorMessage = parseAndFormatApiError(
     error,
     config.getContentGeneratorConfig()?.authType,
@@ -106,6 +138,23 @@ export function handleError(
     console.error(errorMessage);
     throw error;
   }
+}
+
+/**
+ * Format AuthenticationError with remediation steps for clear display
+ */
+function formatAuthenticationError(error: AuthenticationError): string {
+  let message = `\n❌ Authentication Error [${error.code}]\n\n`;
+  message += `${error.message}\n`;
+  
+  if (error.remediationSteps && error.remediationSteps.length > 0) {
+    message += '\n📋 How to fix this:\n';
+    error.remediationSteps.forEach((step, index) => {
+      message += `   ${index + 1}. ${step}\n`;
+    });
+  }
+  
+  return message;
 }
 
 /**
