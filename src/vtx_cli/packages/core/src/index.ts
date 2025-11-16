@@ -20,6 +20,8 @@ export * from './confirmation-bus/message-bus.js';
 // Export authentication types and errors
 export * from './types/authentication.js';
 export * from './errors/AuthenticationError.js';
+export * from './auth/ServiceAccountProvider.js';
+export * from './auth/APIKeyProvider.js';
 
 // Export Commands logic
 export * from './commands/extensions.js';

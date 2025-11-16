@@ -5,8 +5,7 @@
  */
 
 import type { Config } from '@google/gemini-cli-core';
-import { AuthType, debugLogger, OutputFormat } from '@google/gemini-cli-core';
-import { CredentialSource } from '@google/gemini-cli-core';
+import { AuthType, debugLogger, OutputFormat, CredentialSource } from '@google/gemini-cli-core';
 import { USER_SETTINGS_PATH } from './config/settings.js';
 import { validateAuthMethod } from './config/auth.js';
 import { type LoadedSettings } from './config/settings.js';

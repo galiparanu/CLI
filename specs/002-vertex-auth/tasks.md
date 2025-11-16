@@ -31,13 +31,13 @@
 
 **Purpose**: Core authentication detection and validation that all user stories depend on
 
-- [ ] T006 Enhance getAuthTypeFromEnv() in src/vtx_cli/packages/cli/src/validateNonInterActiveAuth.ts to detect credential sources
-- [ ] T007 [P] Add detectCredentialSource() function in src/vtx_cli/packages/cli/src/validateNonInterActiveAuth.ts
-- [ ] T008 [P] Add validateEnvironmentConfig() function in src/vtx_cli/packages/cli/src/config/auth.ts
-- [ ] T009 Enhance validateAuthMethod() in src/vtx_cli/packages/cli/src/config/auth.ts with detailed validation rules
-- [ ] T010 [P] Add validateServiceAccountFile() helper in src/vtx_cli/packages/cli/src/config/auth.ts
-- [ ] T011 [P] Add validateGCPProjectId() helper in src/vtx_cli/packages/cli/src/config/auth.ts
-- [ ] T012 [P] Add validateGCPRegion() helper in src/vtx_cli/packages/cli/src/config/auth.ts
+- [x] T006 Enhance getAuthTypeFromEnv() in src/vtx_cli/packages/cli/src/validateNonInterActiveAuth.ts to detect credential sources
+- [x] T007 [P] Add detectCredentialSource() function in src/vtx_cli/packages/cli/src/validateNonInterActiveAuth.ts
+- [x] T008 [P] Add validateEnvironmentConfig() function in src/vtx_cli/packages/cli/src/config/auth.ts
+- [x] T009 Enhance validateAuthMethod() in src/vtx_cli/packages/cli/src/config/auth.ts with detailed validation rules
+- [x] T010 [P] Add validateServiceAccountFile() helper in src/vtx_cli/packages/cli/src/config/auth.ts
+- [x] T011 [P] Add validateGCPProjectId() helper in src/vtx_cli/packages/cli/src/config/auth.ts
+- [x] T012 [P] Add validateGCPRegion() helper in src/vtx_cli/packages/cli/src/config/auth.ts
 
 **Checkpoint**: Detection and validation infrastructure complete - BLOCKS all user stories until done
 
@@ -51,17 +51,17 @@
 
 ### Implementation for User Story 1
 
-- [ ] T013 [P] [US1] Enhance GoogleCredentialProvider in src/vtx_cli/packages/core/src/mcp/google-auth-provider.ts with token caching
-- [ ] T014 [P] [US1] Create ServiceAccountProvider class in src/vtx_cli/packages/core/src/auth/ServiceAccountProvider.ts
-- [ ] T015 [P] [US1] Create APIKeyProvider class in src/vtx_cli/packages/core/src/auth/APIKeyProvider.ts
-- [ ] T016 [US1] Implement token refresh logic in GoogleCredentialProvider with 5-minute buffer
-- [ ] T017 [US1] Implement token refresh logic in ServiceAccountProvider with 5-minute buffer
-- [ ] T018 [US1] Update createContentGeneratorConfig() in src/vtx_cli/packages/core/src/core/contentGenerator.ts to use new providers
-- [ ] T019 [US1] Ensure bearer token authentication works for Gemini models
-- [ ] T020 [US1] Ensure bearer token authentication works for Claude models via Vertex AI
-- [ ] T021 [US1] Ensure bearer token authentication works for Qwen/DeepSeek models via OpenAI-compatible endpoints
-- [ ] T022 [US1] Add debug logging for credential detection in src/vtx_cli/packages/cli/src/validateNonInterActiveAuth.ts
-- [ ] T023 [US1] Add debug logging for token acquisition and caching
+- [x] T013 [P] [US1] Enhance GoogleCredentialProvider in src/vtx_cli/packages/core/src/mcp/google-auth-provider.ts with token caching
+- [x] T014 [P] [US1] Create ServiceAccountProvider class in src/vtx_cli/packages/core/src/auth/ServiceAccountProvider.ts
+- [x] T015 [P] [US1] Create APIKeyProvider class in src/vtx_cli/packages/core/src/auth/APIKeyProvider.ts
+- [x] T016 [US1] Implement token refresh logic in GoogleCredentialProvider with 5-minute buffer
+- [x] T017 [US1] Implement token refresh logic in ServiceAccountProvider with 5-minute buffer
+- [x] T018 [US1] Update createContentGeneratorConfig() in src/vtx_cli/packages/core/src/core/contentGenerator.ts to use new providers
+- [x] T019 [US1] Ensure bearer token authentication works for Gemini models
+- [x] T020 [US1] Ensure bearer token authentication works for Claude models via Vertex AI
+- [x] T021 [US1] Ensure bearer token authentication works for Qwen/DeepSeek models via OpenAI-compatible endpoints
+- [x] T022 [US1] Add debug logging for credential detection in src/vtx_cli/packages/cli/src/validateNonInterActiveAuth.ts
+- [x] T023 [US1] Add debug logging for token acquisition and caching
 
 **Checkpoint**: All three authentication methods working, users can access all configured Vertex AI models
 
