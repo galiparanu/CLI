@@ -156,5 +156,13 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
       extends: 'gemini-2.5-flash-base',
       modelConfig: {},
     },
+    'claude-sonnet': {
+      modelConfig: {
+        model: 'claude-sonnet',
+        generateContentConfig: {
+          maxOutputTokens: 64000,
+        },
+      },
+    },
   },
 };

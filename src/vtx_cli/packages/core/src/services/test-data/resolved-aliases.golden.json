@@ -70,6 +70,12 @@
       }
     }
   },
+  "claude-sonnet": {
+    "model": "claude-sonnet",
+    "generateContentConfig": {
+      "maxOutputTokens": 64000
+    }
+  },
   "prompt-completion": {
     "model": "gemini-2.5-flash-lite",
     "generateContentConfig": {

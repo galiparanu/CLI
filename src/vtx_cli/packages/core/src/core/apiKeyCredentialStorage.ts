@@ -11,7 +11,7 @@ import { debugLogger } from '../utils/debugLogger.js';
 const KEYCHAIN_SERVICE_NAME = 'gemini-cli-api-key';
 const DEFAULT_API_KEY_ENTRY = 'default-api-key';
 
-const storage = new HybridTokenStorage(KEYCHAIN_SERVICE_NAME, 'api-key');
+const storage = new HybridTokenStorage(KEYCHAIN_SERVICE_NAME);
 
 /**
  * Load cached API key

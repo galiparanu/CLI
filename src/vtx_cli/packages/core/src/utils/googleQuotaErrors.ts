@@ -76,6 +76,40 @@ function parseDurationInSeconds(duration: string): number | null {
 export function classifyGoogleError(error: unknown): unknown {
   const googleApiError = parseGoogleApiError(error);
 
+  // Check for AuthError (from adapters) with rate limit message
+  // This handles errors from AnthropicAdapter, OpenAPIAdapter, etc.
+  if (error instanceof Error && 'code' in error && (error as any).code === 'NETWORK_ERROR') {
+    const errorMessage = error.message.toLowerCase();
+    if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+      // Try to parse retry delay from message
+      const match = error.message.match(/Please retry in ([0-9.]+(?:ms|s))/i);
+      if (match?.[1]) {
+        const retryDelaySeconds = parseDurationInSeconds(match[1]);
+        if (retryDelaySeconds !== null) {
+          return new RetryableQuotaError(
+            error.message,
+            googleApiError ?? {
+              code: 429,
+              message: error.message,
+              details: [],
+            },
+            retryDelaySeconds,
+          );
+        }
+      }
+      // Default retry delay for rate limit errors (60 seconds)
+      return new RetryableQuotaError(
+        error.message,
+        googleApiError ?? {
+          code: 429,
+          message: error.message,
+          details: [],
+        },
+        60, // Default to 60 seconds if no delay specified
+      );
+    }
+  }
+
   if (!googleApiError || googleApiError.code !== 429) {
     // Fallback: try to parse the error message for a retry delay
     const errorMessage = error instanceof Error ? error.message : String(error);

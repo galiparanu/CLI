@@ -111,7 +111,9 @@ export class ServiceAccountProvider {
           }
         };
 
-        return await retryWithBackoff(fetchToken, shouldRetry);
+        return await retryWithBackoff(fetchToken, {
+          shouldRetryOnError: shouldRetry,
+        });
       },
     );
   }
