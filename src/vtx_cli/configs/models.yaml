@@ -1,29 +1,66 @@
 # Multi-Model Configuration for Vertex AI
 # Each entry defines a model that can be used through the CLI
+# region: The GCP region for the model endpoint (default: us-central1)
+# endpoint: Custom endpoint domain (optional, uses region-based default if not specified)
+# api_type: Type of API - "vertex" (default) or "openapi" for OpenAPI-compatible endpoints
+# auth_method: Authentication method - "bearer_token" (uses gcloud auth print-access-token)
 
 gemini:
   name: "Gemini 2.5 Pro"
   endpoint_id: "gemini-2.5-pro"
   adapter: "gemini"
+  region: "global"
+  api_type: "vertex"
+  auth_method: "bearer_token"
 
-claude:
+claude-opus:
   name: "Claude Opus 4.1"
   endpoint_id: "claude-opus-4-1@20250805"
   adapter: "claude"
+  region: "us-east5"
+  api_type: "vertex"
+  auth_method: "bearer_token"
 
-claude:
+claude-sonnet:
   name: "Claude Sonnet 4.5"
   endpoint_id: "claude-sonnet-4-5@20250929"
   adapter: "claude"
+  region: "global"
+  api_type: "vertex"
+  auth_method: "bearer_token"
 
 qwen-coder:
-  name: "Qwen 3 Coder"
+  name: "Qwen 3 Coder 480B"
   endpoint_id: "qwen/qwen3-coder-480b-a35b-instruct-maas"
   adapter: "gemini"
+  region: "us-south1"
+  endpoint: "us-south1-aiplatform.googleapis.com"
+  api_type: "openapi"
+  auth_method: "bearer_token"
 
-deepseek:
-  name: "DeepSeek R1"
+deepseek-v3:
+  name: "DeepSeek V3.1"
+  endpoint_id: "deepseek-ai/deepseek-v3.1-maas"
+  adapter: "gemini"
+  region: "us-west2"
+  endpoint: "us-west2-aiplatform.googleapis.com"
+  api_type: "openapi"
+  auth_method: "bearer_token"
+
+deepseek-r1:
+  name: "DeepSeek R1 0528"
   endpoint_id: "deepseek-ai/deepseek-r1-0528-maas"
   adapter: "gemini"
+  region: "us-central1"
+  endpoint: "us-central1-aiplatform.googleapis.com"
+  api_type: "openapi"
+  auth_method: "bearer_token"
 
-
+kimi-k2:
+  name: "Kimi K2 Thinking"
+  endpoint_id: "moonshotai/kimi-k2-thinking-maas"
+  adapter: "gemini"
+  region: "global"
+  endpoint: "aiplatform.googleapis.com"
+  api_type: "openapi"
+  auth_method: "bearer_token"

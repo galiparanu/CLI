@@ -124,9 +124,18 @@ To make this setting persistent, see
 If you intend to use Google Cloud's Vertex AI platform, you have several
 authentication options:
 
-- Application Default Credentials (ADC) and `gcloud`.
-- A Service Account JSON key.
-- A Google Cloud API key.
+- Application Default Credentials (ADC) and `gcloud` **(Recommended for Development)**
+- A Service Account JSON key **(Recommended for Production/CI/CD)**
+- A Google Cloud API key
+
+**Automatic Detection**: Gemini CLI automatically detects which authentication method to use based on your environment configuration. The detection order is:
+
+1. **API Key** (`GOOGLE_API_KEY` is set)
+2. **Service Account** (`GOOGLE_APPLICATION_CREDENTIALS` points to a JSON file)
+3. **ADC** (gcloud credentials at `~/.config/gcloud/application_default_credentials.json`)
+4. **Compute Metadata** (running on GCE/GKE)
+
+You only need to set the environment variables for your preferred method—the CLI handles the rest.
 
 #### First: Set required environment variables
 
@@ -144,6 +153,15 @@ export GOOGLE_CLOUD_LOCATION="YOUR_PROJECT_LOCATION"
 ```
 
 #### A. Vertex AI - Application Default Credentials (ADC) using `gcloud`
+
+**✨ Best for:** Local development, rapid prototyping
+
+**Benefits:**
+
+- No credential files to manage
+- Automatic credential refresh
+- Uses your personal Google account permissions
+- Easy to switch between projects
 
 Consider this method of authentication if you have Google Cloud CLI installed.
 
@@ -170,6 +188,15 @@ unset GOOGLE_API_KEY GEMINI_API_KEY
 
 #### B. Vertex AI - Service Account JSON key
 
+**✨ Best for:** CI/CD pipelines, production deployments, containerized environments
+
+**Benefits:**
+
+- Explicit, granular permissions (principle of least privilege)
+- Reproducible across environments
+- Works in restricted/non-interactive environments
+- Can be rotated independently
+
 Consider this method of authentication in non-interactive environments, CI/CD,
 or if your organization restricts user-based ADC or API key creation.
 
@@ -182,13 +209,31 @@ unset GOOGLE_API_KEY GEMINI_API_KEY
 
 1.  [Create a service account and key](https://cloud.google.com/iam/docs/keys-create-delete)
     and download the provided JSON file. Assign the "Vertex AI User" role to the
-    service account.
+    service account:
+
+    ```bash
+    # Create service account
+    gcloud iam service-accounts create gemini-cli-sa \
+      --display-name="Gemini CLI Service Account"
+
+    # Grant Vertex AI User role
+    gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+      --member="serviceAccount:gemini-cli-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+      --role="roles/aiplatform.user"
+
+    # Create and download key
+    gcloud iam service-accounts keys create ~/gemini-cli-sa-key.json \
+      --iam-account=gemini-cli-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
+    ```
+
 2.  Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to the JSON
     file's absolute path:
 
     ```bash
     # Replace /path/to/your/keyfile.json with the actual path
     export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/keyfile.json"
+    # Or use the example from above
+    export GOOGLE_APPLICATION_CREDENTIALS="$HOME/gemini-cli-sa-key.json"
     ```
 
 3.  Ensure `GOOGLE_CLOUD_PROJECT` (or `GOOGLE_CLOUD_PROJECT_ID`) and
@@ -217,6 +262,99 @@ unset GOOGLE_API_KEY GEMINI_API_KEY
 
 To make any of these Vertex AI environment variable settings persistent, see
 [Persisting Environment Variables](#persisting-environment-variables).
+
+## Troubleshooting Vertex AI Authentication
+
+Gemini CLI provides clear, actionable error messages when authentication fails. Here are common issues and solutions:
+
+### Missing Required Environment Variables
+
+**Error:**
+
+```
+When using Vertex AI, you must specify either:
+• GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION
+• GOOGLE_API_KEY
+```
+
+**Solution:** Set the required variables:
+
+```bash
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+export GOOGLE_CLOUD_LOCATION="us-central1"  # or your preferred region
+```
+
+### Service Account File Not Found
+
+**Error:**
+
+```
+Service account file not found: /path/to/sa.json
+```
+
+**Solutions:**
+
+- Verify the file path is correct (use absolute paths)
+- Check file exists: `ls -la /path/to/sa.json`
+- Ensure file has read permissions: `chmod 600 /path/to/sa.json`
+
+### Permission Denied
+
+**Error:**
+
+```
+Authentication failed: Permission denied accessing Vertex AI
+```
+
+**Solution:** Grant the "Vertex AI User" role to your service account or user:
+
+```bash
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:your-sa@your-project.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+```
+
+### API Not Enabled
+
+**Error:**
+
+```
+Vertex AI API not enabled for project PROJECT_ID
+```
+
+**Solution:** Enable the Vertex AI API:
+
+```bash
+gcloud services enable aiplatform.googleapis.com --project=YOUR_PROJECT_ID
+```
+
+Or visit: https://console.cloud.google.com/apis/library/aiplatform.googleapis.com
+
+### API Keys Not Supported
+
+**Error:**
+
+```
+API keys are not supported by this API
+```
+
+**Solution:** Your organization has disabled API key usage. Use ADC or Service Account authentication instead:
+
+```bash
+unset GOOGLE_API_KEY
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
+```
+
+### Debug Mode
+
+For detailed authentication logs, enable debug mode:
+
+```bash
+export DEBUG=1
+gemini
+```
+
+This shows which authentication method was detected and used.
 
 ## Persisting Environment Variables
 

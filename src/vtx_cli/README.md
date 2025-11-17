@@ -182,13 +182,55 @@ gemini
 - **Enterprise features**: Advanced security and compliance
 - **Scalable**: Higher rate limits with billing account
 - **Integration**: Works with existing Google Cloud infrastructure
+- **Multiple authentication methods**: ADC, service accounts, or API keys
+
+#### Method 3a: Application Default Credentials (ADC) - Recommended for Development
+
+```bash
+# Authenticate with gcloud
+gcloud auth application-default login
+
+# Set required environment variables
+export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
+export GOOGLE_CLOUD_LOCATION="us-central1"  # or your preferred region
+
+gemini
+```
+
+#### Method 3b: Service Account JSON Key - Recommended for Production/CI/CD
+
+```bash
+# Download service account key from Google Cloud Console
+# Save as service-account.json
+
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
+export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
+export GOOGLE_CLOUD_LOCATION="us-central1"
+
+gemini
+```
+
+**Required IAM Role**: Your service account needs the "Vertex AI User" role (`roles/aiplatform.user`):
+
+```bash
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:your-sa@your-project.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+```
+
+#### Method 3c: API Key with Vertex AI
 
 ```bash
 # Get your key from Google Cloud Console
 export GOOGLE_API_KEY="YOUR_API_KEY"
 export GOOGLE_GENAI_USE_VERTEXAI=true
+export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
+export GOOGLE_CLOUD_LOCATION="us-central1"
+
 gemini
 ```
+
+**Note**: Organization policies may restrict API key usage. Use service accounts for production environments.
 
 For Google Workspace accounts and other authentication methods, see the
 [authentication guide](./docs/get-started/authentication.md).

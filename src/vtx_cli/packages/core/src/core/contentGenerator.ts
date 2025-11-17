@@ -62,18 +62,20 @@ export type ContentGeneratorConfig = {
   location?: string;
 };
 
+function getEnv(key: string): string | undefined {
+  const value = process.env[key];
+  return !value || value.trim() === '' ? undefined : value;
+}
+
 export async function createContentGeneratorConfig(
   config: Config,
   authType: AuthType | undefined,
 ): Promise<ContentGeneratorConfig> {
-  const geminiApiKey =
-    (await loadApiKey()) || process.env['GEMINI_API_KEY'] || undefined;
-  const googleApiKey = process.env['GOOGLE_API_KEY'] || undefined;
+  const geminiApiKey = (await loadApiKey()) || getEnv('GEMINI_API_KEY');
+  const googleApiKey = getEnv('GOOGLE_API_KEY');
   const googleCloudProject =
-    process.env['GOOGLE_CLOUD_PROJECT'] ||
-    process.env['GOOGLE_CLOUD_PROJECT_ID'] ||
-    undefined;
-  const googleCloudLocation = process.env['GOOGLE_CLOUD_LOCATION'] || undefined;
+    getEnv('GOOGLE_CLOUD_PROJECT') || getEnv('GOOGLE_CLOUD_PROJECT_ID');
+  const googleCloudLocation = getEnv('GOOGLE_CLOUD_LOCATION');
 
   const contentGeneratorConfig: ContentGeneratorConfig = {
     authType,

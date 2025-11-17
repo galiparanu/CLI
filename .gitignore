@@ -17,14 +17,21 @@ yarn-error.log*
 .npm/
 coverage/
 *.tsbuildinfo
+*.min.js
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # OS
 .DS_Store
 Thumbs.db
+*.tmp
+*.swp
 
 # IDE
 .vscode/
 .idea/
+*.iml
 
 # Logs
 *.log
@@ -39,3 +46,6 @@ bundle/
 # Test artifacts
 junit.xml
 .vitest/
+
+# TypeScript
+*.prof*

@@ -1,0 +1,6 @@
+{
+  "build": {
+    "context": "..",
+    "dockerfile": "src/vtx_cli/Dockerfile"
+  }
+}
